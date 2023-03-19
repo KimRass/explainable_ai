@@ -70,7 +70,7 @@ class GuidedBackpropogation():
 
         for module in self.model.modules():
             if isinstance(module, nn.ReLU):
-                # print(module)
+                print(module)
                 # The `hook` will be called every time after `forward()` has computed an output.
                 # `register_forward_hook(module, input, output)`:
                 module.register_forward_hook(forward_hook_fn)
@@ -96,6 +96,7 @@ class GuidedBackpropogation():
         return self.reconstructed_image.data[0]
 image = transform(img).unsqueeze(0).requires_grad_()
 model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
+model
 guided_backprop = GuidedBackpropogation(model)
 # guided_backprop.register_hooks()
 result = guided_backprop.visualize(image)
