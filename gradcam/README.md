@@ -33,6 +33,10 @@ $$\alpha^{c}_{k} = \frac{1}{Z} \sum_{i} \sum_{j} \frac{\partial{y^{c}}}{\partial
 - We perform a weighted combination of forward activation maps, and follow it by a ReLU to obtain class-dicriminative localization map,
 $$L^{c}_{Grad-CAM} = \text{ReLU}\bigg(\sum_{k}\alpha^{k}A^{k}\bigg)$$
 - ***Notice that this results in a coarse heatmap of the same size as the convolutional feature maps (14 × 14 in the case of last convolutional layers of VGG and AlexNet networks). We apply a ReLU to the linear combination of maps because we are only interested in the features that have a positive influence on the class of interest, i.e. pixels whose intensity should be increased in order to increase $y^{c}$. Negative pixels are likely to belong to other categories in the image. As expected, without this ReLU, localization maps sometimes highlight more than just the desired class and perform worse at localization.***
+- Guided Grad-CAM
+    - Grad-CAM lacks the ability to highlight fine-grained details like pixel-space gradient visualization methods (Guided Backpropagation [53], Deconvolution [57]). Guided Backpropagation visualizes gradients with respect to the image where negative gradients are suppressed when backpropagating through ReLU layers. Intuitively, this aims to capture pixels detected by neurons, not the ones that suppress neurons.
+    - In order to combine the best aspects of both, we fuse Guided Backpropagation and Grad-CAM visualizations via element-wise multiplication ($L^{c}_{Grad-CAM}$ ***is first upsampled to the input image resolution using bilinear interpolation***).
+    - Replacing Guided Backpropagation with Deconvolution gives similar results, but we found Deconvolution visualizations to have artifacts and Guided Backpropagation to be generally less noisy.
 ## References
 - [53] [Striving for Simplicity: The All Convolutional Net](https://arxiv.org/pdf/1412.6806.pdf)
 - [57] [Visualizing and Understanding Convolutional Networks](https://arxiv.org/pdf/1311.2901.pdf)
