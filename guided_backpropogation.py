@@ -5,7 +5,7 @@ import json
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.functional as F
+import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as T
 from torchvision.models import resnet50, ResNet50_Weights
