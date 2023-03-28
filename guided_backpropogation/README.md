@@ -12,9 +12,9 @@
 - Figure 1 [4]
     - <img src="https://user-images.githubusercontent.com/67457712/226080571-0e94e14d-49ee-48ad-b32c-d1901ed7889c.png" width="700">
     - $f$ represents a feature map produced by some layer of a CNN, and $R$ represents an intermediate result in the calculation of backpropagation.
-    - b) Forward pass
+    - 'b)' 'Forward pass'
         - Comment: 왼쪽은 $f^{l}_{i}$을, 오른쪽은 $f^{l + 1}_{i}$을 나타냅니다.
-    - b) Backward pass: backpropagation, Backward pass: "deconvnet" and Backward pass: guided backpropagation
+    - 'b)' 'Backward pass: backpropagation', 'Backward pass: "deconvnet"' and 'Backward pass: guided backpropagation'
         - Comment: 왼쪽은 $R^{l}_i$을, 오른쪽은 $R^{l + 1}_{i}$을 나타냅니다.
     - Guided Backpropagation basically combines vanilla backpropagation and DeconvNets when handling the ReLU nonlinearity:
         - Like vanilla backpropagation, we restrict ourselves to only positive inputs.
