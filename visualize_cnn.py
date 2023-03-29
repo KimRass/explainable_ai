@@ -4,19 +4,13 @@
     # https://towardsdatascience.com/visualizing-convolution-neural-networks-using-pytorch-3dfa8443e74e
     # https://ravivaishnav20.medium.com/visualizing-feature-maps-using-pytorch-12a48cd1e573
 
-import argparse
-from pathlib import Path
-import requests
-import cv2
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
 import torchvision
-import torchvision.T as T
-# from torchvision.models import vgg19_bn, VGG19_BN_Weights
-from torchvision.models import alexnet, AlexNet_Weights
+import torchvision.transforms as T
+from torchvision.models import alexnet, AlexNet_Weights, vgg19_bn, VGG19_BN_Weights
 import matplotlib.pyplot as plt
 
 
