@@ -1,9 +1,11 @@
 # References
-    # https://github.com/csgwon/pytorch-VGG16DeconvNet/blob/master/models/vgg16_deconv.py
+    # https://github.com/csgwon/pytorch-deconvnet/blob/master/models/vgg16_deconv.py
 
 import torch
 import torch.nn as nn
 from torchvision.models import vgg16, VGG16_Weights
+import torchvision.transforms as T
+import numpy as np
 
 
 class VGG16ConvNet(torch.nn.Module):
@@ -11,7 +13,7 @@ class VGG16ConvNet(torch.nn.Module):
         super().__init__()
 
         self.pool_indices = dict()
-        self._transfer_convolution_layer_parameters()
+        # self._transfer_convolution_layer_parameters(pretrained_layers)
 
         # features = torch.nn.Sequential(
         self.layer0 = torch.nn.Conv2d(3, 64, kernel_size=3, padding=1)
@@ -85,9 +87,10 @@ class VGG16ConvNet(torch.nn.Module):
         self.pool_indices[30] = pool_indices
         return x
         
-    def _transfer_convolution_layer_parameters(self):
-        for pretrained_layer, learning_layer in zip(vgg16_pretrained.features, self.children()):
+    def _transfer_convolution_layer_parameters(self, pretrained_layers):
+        for pretrained_layer, learning_layer in zip(pretrained_layers, self.children()):
             if isinstance(pretrained_layer, nn.Conv2d) and isinstance(learning_layer, nn.Conv2d):
+                print(pretrained_layer, learning_layer)
                 learning_layer.weight.data = pretrained_layer.weight.data
                 learning_layer.bias.data = pretrained_layer.bias.data
     
@@ -100,7 +103,7 @@ class VGG16DeconvNet(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self._transfer_convolution_layer_parameters()
+        # self._transfer_convolution_layer_parameters(pretrained_layers)
 
         self.layer0 = torch.nn.ConvTranspose2d(64, 3, kernel_size=3, padding=1)
         self.layer1 = torch.nn.ReLU()
@@ -155,33 +158,61 @@ class VGG16DeconvNet(nn.Module):
         x = self.layer0(x)
         return x
     
-    def _transfer_convolution_layer_parameters(self):
-        for pretrained_layer, learning_layer in zip(vgg16_pretrained.features, self.children()):
+    def _transfer_convolution_layer_parameters(self, pretrained_layers):
+        for pretrained_layer, learning_layer in zip(pretrained_layers, self.children()):
             if isinstance(pretrained_layer, nn.Conv2d) and isinstance(learning_layer, nn.ConvTranspose2d):
+                print(pretrained_layer, learning_layer)
                 learning_layer.weight.data = pretrained_layer.weight.data
                 learning_layer.bias.data = pretrained_layer.bias.data
 
 
+def denormalize_array(img, mean=(0.485, 0.456, 0.406), variance=(0.229, 0.224, 0.225)):
+    copied_img = img.copy()
+    copied_img *= variance
+    copied_img += mean
+    copied_img *= 255.0
+    copied_img = np.clip(a=copied_img, a_min=0, a_max=255).astype("uint8")
+    return copied_img
+
+
 if __name__ == "__main__":
     vgg16_pretrained = vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
-    input = torch.randn((1, 3, 224, 224))
-    feat_map = vgg16_pretrained.features(input)
+    # input = torch.randn((1, 3, 224, 224))
+    transform = T.Compose(
+        [
+            T.ToTensor(),
+            T.Resize((224, 224)),
+            T.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225]
+            )
+        ]
+    )
+    img = load_image("/Users/jongbeomkim/Downloads/imagenet-mini/val/n13133613/ILSVRC2012_val_00019877.JPEG")
+    image = transform(img).unsqueeze(0)
 
+    pretrained_layers = vgg16_pretrained.features
+    pretrained_layers[0]
     convnet = VGG16ConvNet()
-    input = torch.randn((1, 3, 224, 224))
-    output, maxpool_indices = convnet._get_output_and_maxpool_indices(input)
+    convnet._transfer_convolution_layer_parameters(pretrained_layers)
+    output, maxpool_indices = convnet._get_output_and_maxpool_indices(image)
+
     deconvnet = VGG16DeconvNet()
-    deconvnet(output, maxpool_indices)
+    deconvnet._transfer_convolution_layer_parameters(pretrained_layers)
+    
+    temp = deconvnet(output, maxpool_indices)
+    temp = temp.clone().squeeze().permute((1, 2, 0)).detach().cpu().numpy()
+    temp = denormalize_array(temp)
+    show_image(temp)
+    # layer30 = torch.nn.MaxUnpool2d(kernel_size=2, stride=2)
+    # layer28 = torch.nn.ConvTranspose2d(512, 512, kernel_size=3, padding=1)
+    # temp = layer30(output, maxpool_indices[30])
+    # layer28(temp)
 
-    layer30 = torch.nn.MaxUnpool2d(kernel_size=2, stride=2)
-    layer28 = torch.nn.ConvTranspose2d(512, 512, kernel_size=3, padding=1)
-    temp = layer30(output, maxpool_indices[30])
-    layer28(temp)
-
-    for pretrained_layer, learning_layer in zip(vgg16_pretrained.features, deconvnet.children()):
-        if isinstance(pretrained_layer, nn.Conv2d) and isinstance(learning_layer, nn.ConvTranspose2d):
-            learning_layer.weight.data = pretrained_layer.weight.data
-            learning_layer.bias.data = pretrained_layer.bias.data
+    # for pretrained_layer, learning_layer in zip(vgg16_pretrained.features, deconvnet.children()):
+    #     if isinstance(pretrained_layer, nn.Conv2d) and isinstance(learning_layer, nn.ConvTranspose2d):
+    #         learning_layer.weight.data = pretrained_layer.weight.data
+    #         learning_layer.bias.data = pretrained_layer.bias.data
 
 
     # input = torch.torch.tensor([[[[ 1.,  2.,  3., 4., 5.],
