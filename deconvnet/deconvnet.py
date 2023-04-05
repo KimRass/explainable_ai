@@ -11,13 +11,6 @@ import cv2
 from PIL import Image
 
 
-def load_image(img_path):
-    img_path = str(img_path)
-    img = cv2.imread(img_path, flags=cv2.IMREAD_COLOR)
-    img = cv2.cvtColor(src=img, code=cv2.COLOR_BGR2RGB)
-    return img
-
-
 class DeconvNet(nn.Module):
     def __init__(self):
         super().__init__()
@@ -30,14 +23,22 @@ class DeconvNet(nn.Module):
     
     def transfer_parameters_to_backward_network(self):
         self.backward_net._transfer_conv2d_to_convtranspose2d(self.forward_net)
+
+    def _sort_feature_map(self, feat_map):
+        argsort = torch.argsort(feat_map.sum(dim=(2, 3)), dim=1, descending=True)[0]
+        feat_map = feat_map[:, argsort]
+        return feat_map
     
-    def reconstruct_feature_map(self, image, trg_layer, id):
+    def project_feature_map(self, image, trg_layer, id=None):
         self.forward_net.register_hooks(trg_layer=trg_layer)
         maxpool_indices = self.forward_net._get_maxpool_indices(image)
 
         feat_map = self.forward_net.feat_map
-        feat_map[:, : id, :, :] = 0
-        feat_map[:, id + 1:, :, :] = 0
+        feat_map = self._sort_feature_map(feat_map)
+        # return feat_map
+        if id is not None:
+            feat_map[:, : id, :, :] = 0
+            feat_map[:, id + 1:, :, :] = 0
 
         x = self.backward_net(x=feat_map, maxpool_indices=maxpool_indices, trg_layer=trg_layer)
         return x
@@ -130,17 +131,13 @@ class DeconvNet(nn.Module):
         
         def _get_maxpool_indices(self, x):
             x = self(x)
-            # self.register_hooks()
-            # return self.feat_maps, self.pool_indices
             return self.pool_indices
         
         def register_hooks(self, trg_layer):
             def get_feature_map(name, trg_layer):
                 def forward_hook_fn(module, input, output):
                     if name == trg_layer:
-                        # print(name)
                         self.feat_map = output
-                        # print(self.feat_map.shape)
                     else:
                         return None
                 return forward_hook_fn
@@ -190,6 +187,7 @@ class DeconvNet(nn.Module):
         def forward(self, x, maxpool_indices, trg_layer):
             layer_num = int(trg_layer[5:])
             for i in range(layer_num, -1, -1):
+                print(f"""self.layer{i}""")
                 layer = eval(f"""self.layer{i}""")
                 if isinstance(layer, nn.MaxUnpool2d):
                     x = layer(x, maxpool_indices[i])
@@ -262,6 +260,13 @@ class DeconvNet(nn.Module):
                 deconvnet_layer.bias.data = convnet_layer.bias.data
 
 
+def load_image(img_path):
+    img_path = str(img_path)
+    img = cv2.imread(img_path, flags=cv2.IMREAD_COLOR)
+    img = cv2.cvtColor(src=img, code=cv2.COLOR_BGR2RGB)
+    return img
+
+
 def print_all_layers(model):
     print(f"""|         NAME         |                            MODULE                            |""")
     print(f"""|----------------------|--------------------------------------------------------------|""")
@@ -272,7 +277,7 @@ def print_all_layers(model):
 
 def postprocess_reconstructed_activation(act, mean=(0.485, 0.456, 0.406), variance=(0.229, 0.224, 0.225)):
     copied_act = act.clone().squeeze().permute((1, 2, 0)).detach().cpu().numpy()
-    copied_act *= 100
+    # copied_act *= 100
     copied_act -= copied_act.min()
     copied_act /= copied_act.max()
     copied_act *= 255.0
@@ -303,7 +308,7 @@ if __name__ == "__main__":
             )
         ]
     )
-    img = load_image("/Users/jongbeomkim/Downloads/imagenet-mini/val/n13054560/ILSVRC2012_val_00004472.JPEG")
+    img = load_image("/Users/jongbeomkim/Downloads/imagenet-mini/train/n07697313/n07697313_363.JPEG")
     # img = load_image("D:/imagenet-mini/train/n02088238/n02088238_1635.JPEG")
     image = transform(img).unsqueeze(0)
 
@@ -312,6 +317,6 @@ if __name__ == "__main__":
     deconvnet.transfer_parameters_to_forward_network(vgg16_pretrained.features)
     deconvnet.transfer_parameters_to_backward_network()
 
-    reconst_act = deconvnet.reconstruct_feature_map(image=image, trg_layer="layer5", id=16)
-    result = postprocess_reconstructed_activation(reconst_act)
+    act = deconvnet.project_feature_map(image=image, trg_layer="layer7", id=0)
+    result = postprocess_reconstructed_activation(act)
     show_image(result)
