@@ -44,7 +44,6 @@ def visualize_kernels(kernels):
     grid = torch.sum(grid, axis=0)
     grid = convert_tensor_to_array(grid)
     grid = _convert_to_3d(grid)
-    # show_image(grid)
     return grid
 
 
