@@ -63,7 +63,7 @@ def _blend_two_images(img1, img2, alpha=0.5):
     return _convert_to_array(blended_img)
 
 
-class CAMGenerator():
+class ClassActivationMapper():
     def __init__(self, model):
         self.model = model
         self.feat_map = None # $f_{k}$
@@ -173,7 +173,7 @@ if __name__ == "__main__":
     model.eval()
     model.zero_grad()
 
-    cam_gen = CAMGenerator(model)
+    cam_gen = ClassActivationMapper(model)
 
     transform = T.Compose(
         [
@@ -199,7 +199,7 @@ if __name__ == "__main__":
         print(idx2class[str(category)][1])
         save_image(img=cam, path=dir/f"""{img_path.stem.rsplit("_", 1)[0]}_cam.png""")
 
-        # cam_gen = CAMGenerator(model)
+        # cam_gen = ClassActivationMapper(model)
         bboxes = cam_gen.get_top_n_bboxes(image=image, n=5, thresh=0.7)
         drawn = draw_bboxes(img=tensor_to_array(image), bboxes=bboxes[0: 1, ...,])
         save_image(img=drawn, path=dir/f"""{img_path.stem.rsplit("_", 1)[0]}_bboxes.png""")
