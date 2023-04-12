@@ -140,7 +140,7 @@ def draw_bboxes(img, bboxes):
     canvas = _convert_to_pil(img)
     draw = ImageDraw.Draw(canvas)
 
-    for x1, y1, x2, y2, label in bboxes:
+    for x1, y1, x2, y2, label in bboxes.values:
         draw.rectangle(
             xy=(x1, y1, x2, y2),
             outline=(255, 0, 0),
@@ -148,7 +148,7 @@ def draw_bboxes(img, bboxes):
             width=max(1, int(min(x2 - x1, y2 - y1) * 0.02))
         )
 
-    for x1, y1, x2, y2, label in bboxes:
+    for x1, y1, x2, y2, label in bboxes.values:
         draw.text(
             xy=(x1, y1 - 4),
             text=" " + idx2class[str(label)][1],
