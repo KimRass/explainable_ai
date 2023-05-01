@@ -54,4 +54,4 @@
         - E.g. in the 1st row, for most locations it is "pomeranian", but if the dog’s face is obscured but not the ball, then it predicts "tennis ball".
 ## References
 - [1] [Adaptive Deconvolutional Networks for Mid and High Level Feature Learning]
-- [2] [ImageNet Classification with Deep Convolutional Neural Networks](https://proceedings.neurips.cc/paper_files/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf)
+- [2] [ImageNet Classification with Deep Convolutional Neural Networks, 2012](https://proceedings.neurips.cc/paper_files/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf)
