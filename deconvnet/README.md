@@ -1,5 +1,5 @@
 # Paper Understanding
-- [Visualizing and Understanding Convolutional Networks](https://arxiv.org/pdf/1311.2901.pdf)
+- [Visualizing and Understanding Convolutional Networks, 2014](https://arxiv.org/pdf/1311.2901.pdf)
 ## Introduction
 - We introduce ***a visualization technique that reveals the input stimuli that excite individual feature maps at any layer in the model.*** It also allows us to observe the evolution of features during training and to diagnose potential problems with the model. The visualization technique we propose uses a multi-layered Deconvolutional Network (deconvnet), as proposed by [1] to project the feature activations back to the input pixel space.
 - We also perform a sensitivity analysis of the classifier output by occluding portions of the input image, revealing which parts of the scene are important for classification.

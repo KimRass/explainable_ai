@@ -39,5 +39,5 @@ $$L^{c}_{Grad-CAM} = \text{ReLU}\bigg(\sum_{k}\alpha^{k}A^{k}\bigg)$$
     - Replacing Guided Backpropagation with Deconvolution gives similar results, but we found Deconvolution visualizations to have artifacts and Guided Backpropagation to be generally less noisy.
 ## References
 - [53] [Striving for Simplicity: The All Convolutional Net](https://arxiv.org/pdf/1412.6806.pdf)
-- [57] [Visualizing and Understanding Convolutional Networks](https://arxiv.org/pdf/1311.2901.pdf)
+- [57] [Visualizing and Understanding Convolutional Networks, 2014](https://arxiv.org/pdf/1311.2901.pdf)
 - [59] [Learning Deep Features for Discriminative Localization](https://arxiv.org/pdf/1512.04150.pdf)
