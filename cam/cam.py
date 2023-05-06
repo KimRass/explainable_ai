@@ -3,43 +3,21 @@ import torch.nn as nn
 from torchvision.models import googlenet, GoogLeNet_Weights
 import torchvision.transforms as T
 import json
-from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 import cv2
-import requests
 from pathlib import Path
 
+from process_images import (
+    load_image,
+    _blend_two_images,
+    save_image,
+    _apply_jet_colormap,
+    _reverse_jet_colormap,
+    draw_bboxes
+)
 
-def load_image(url_or_path=""):
-    url_or_path = str(url_or_path)
-
-    if "http" in url_or_path:
-        img_arr = np.asarray(
-            bytearray(requests.get(url_or_path).content), dtype="uint8"
-        )
-        img = cv2.imdecode(img_arr, flags=cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(src=img, code=cv2.COLOR_BGR2RGB)
-    else:
-        img = cv2.imread(url_or_path, flags=cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(src=img, code=cv2.COLOR_BGR2RGB)
-    return img
-
-
-def _convert_to_pil(img):
-    if not isinstance(img, Image.Image):
-        img = Image.fromarray(img)
-    return img
-
-
-def show_image(img):
-    copied_img = img.copy()
-    copied_img = _convert_to_pil(copied_img)
-    copied_img.show()
-
-
-def _apply_jet_colormap(img):
-    img_jet = cv2.applyColorMap(src=(255 - img), colormap=cv2.COLORMAP_JET)
-    return img_jet
+# IDX2CLASS = json.load(open("./imagenet_class_index.json"))
+IDX2CLASS = json.load(open("/Users/jongbeomkim/Desktop/workspace/explainable_ai/cam/imagenet_class_index.json"))
 
 
 def tensor_to_array(image, mean=(0.485, 0.456, 0.406), variance=(0.229, 0.224, 0.225)):
@@ -49,18 +27,6 @@ def tensor_to_array(image, mean=(0.485, 0.456, 0.406), variance=(0.229, 0.224, 0
     img *= 255.0
     img = np.clip(img, 0, 255).astype("uint8")
     return img
-
-
-def _convert_to_array(img):
-    img = np.array(img)
-    return img
-
-
-def _blend_two_images(img1, img2, alpha=0.5):
-    img1 = _convert_to_pil(img1)
-    img2 = _convert_to_pil(img2)
-    blended_img = Image.blend(im1=img1, im2=img2, alpha=alpha)
-    return _convert_to_array(blended_img)
 
 
 class ClassActivationMapper():
@@ -123,52 +89,7 @@ class ClassActivationMapper():
         return bboxes
 
 
-def save_image(img, path):
-    _convert_to_pil(img).save(str(path))
-
-
-def _reverse_jet_colormap(img):
-    gray_values = np.arange(256, dtype=np.uint8)
-    color_values = list(map(tuple, _apply_jet_colormap(gray_values).reshape(256, 3)))
-    color_to_gray_map = dict(zip(color_values, gray_values))
-
-    out = np.apply_along_axis(lambda bgr: color_to_gray_map[tuple(bgr)], axis=2, arr=img)
-    return out
-
-
-def draw_bboxes(img, bboxes):
-    canvas = _convert_to_pil(img)
-    draw = ImageDraw.Draw(canvas)
-
-    for x1, y1, x2, y2, label in bboxes.values:
-        draw.rectangle(
-            xy=(x1, y1, x2, y2),
-            outline=(255, 0, 0),
-            fill=None,
-            width=max(1, int(min(x2 - x1, y2 - y1) * 0.02))
-        )
-
-    for x1, y1, x2, y2, label in bboxes.values:
-        draw.text(
-            xy=(x1, y1 - 4),
-            text=" " + idx2class[str(label)][1],
-            fill="white",
-            stroke_fill="black",
-            stroke_width=2,
-            font=ImageFont.truetype(
-                # font="./fonts/Pretendard-Regular.otf",
-                font="/Users/jongbeomkim/Downloads/Pretendard-1.3.6/public/static/Pretendard-Regular.otf",
-                size=max(10, int(min(40, min(x2 - x1, y2 - y1) * 0.12)))
-            ),
-            anchor="la"
-        )
-    return canvas
-
-
 if __name__ == "__main__":
-    # idx2class = json.load(open("./imagenet_class_index.json"))
-    idx2class = json.load(open("/Users/jongbeomkim/Desktop/workspace/explainable_ai/cam/imagenet_class_index.json"))
-
     model = googlenet(weights=GoogLeNet_Weights.IMAGENET1K_V1)
     model.eval()
     model.zero_grad()
@@ -196,7 +117,7 @@ if __name__ == "__main__":
         image = transform(img).unsqueeze(0)
 
         cam, category = cam_gen.get_class_activation_map(image=image, with_image=True)
-        print(idx2class[str(category)][1])
+        print(IDX2CLASS[str(category)][1])
         save_image(img=cam, path=dir/f"""{img_path.stem.rsplit("_", 1)[0]}_cam.png""")
 
         # cam_gen = ClassActivationMapper(model)
