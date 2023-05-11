@@ -10,6 +10,12 @@ import numpy as np
 import cv2
 from PIL import Image
 
+from process_images import (
+    load_image,
+    _to_pil,
+    show_image
+)
+
 
 class DeconvNet(nn.Module):
     def __init__(self):
@@ -260,13 +266,6 @@ class DeconvNet(nn.Module):
                 deconvnet_layer.bias.data = convnet_layer.bias.data
 
 
-def load_image(img_path):
-    img_path = str(img_path)
-    img = cv2.imread(img_path, flags=cv2.IMREAD_COLOR)
-    img = cv2.cvtColor(src=img, code=cv2.COLOR_BGR2RGB)
-    return img
-
-
 def print_all_layers(model):
     print(f"""|         NAME         |                            MODULE                            |""")
     print(f"""|----------------------|--------------------------------------------------------------|""")
@@ -283,18 +282,6 @@ def postprocess_reconstructed_activation(act, mean=(0.485, 0.456, 0.406), varian
     copied_act *= 255.0
     copied_act = np.clip(a=copied_act, a_min=0, a_max=255).astype("uint8")
     return copied_act
-
-
-def _convert_to_pil(img):
-    if not isinstance(img, Image.Image):
-        img = Image.fromarray(img)
-    return img
-
-
-def show_image(img):
-    copied_img = img.copy()
-    copied_img = _convert_to_pil(copied_img)
-    copied_img.show()
 
 
 if __name__ == "__main__":

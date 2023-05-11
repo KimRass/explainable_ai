@@ -8,28 +8,16 @@ from typing import Literal
 from PIL import Image
 import requests
 
-
-def load_image(url_or_path=""):
-    url_or_path = str(url_or_path)
-
-    if "http" in url_or_path:
-        img_arr = np.asarray(
-            bytearray(requests.get(url_or_path).content), dtype="uint8"
-        )
-        img = cv2.imdecode(img_arr, flags=cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(src=img, code=cv2.COLOR_BGR2RGB)
-    else:
-        img = cv2.imread(url_or_path, flags=cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(src=img, code=cv2.COLOR_BGR2RGB)
-    return img
-
-
-def show_image(img):
-    _convert_to_pil(img).show()
-
-
-def save_image(img, path):
-    _convert_to_pil(img).save(str(path))
+from process_images import (
+    load_image,
+    show_image,
+    save_image,
+    resize_image,
+    get_width_and_height,
+    _blend_two_images,
+    _apply_jet_colormap,
+    _rgba_to_rgb
+)
 
 
 def denormalize_array(img):
@@ -49,42 +37,6 @@ def convert_tensor_to_array(tensor):
         copied_tensor = copied_tensor.detach().cpu().numpy()
     copied_tensor = denormalize_array(copied_tensor)
     return copied_tensor
-
-
-def resize_image(img, w, h):
-    resized_img = cv2.resize(src=img, dsize=(w, h))
-    return resized_img
-
-
-def get_width_and_height(img):
-    if img.ndim == 2:
-        h, w = img.shape
-    else:
-        h, w, _ = img.shape
-    return w, h
-
-
-def _convert_to_pil(img):
-    if not isinstance(img, Image.Image):
-        img = Image.fromarray(img)
-    return img
-
-
-def _convert_to_array(img):
-    img = np.array(img)
-    return img
-
-
-def _blend_two_images(img1, img2, alpha=0.5):
-    img1 = _convert_to_pil(img1)
-    img2 = _convert_to_pil(img2)
-    img_blended = Image.blend(im1=img1, im2=img2, alpha=alpha)
-    return _convert_to_array(img_blended)
-
-
-def _apply_jet_colormap(img):
-    img_jet = cv2.applyColorMap(src=(255 - img), colormap=cv2.COLORMAP_JET)
-    return img_jet
 
 
 def print_all_layers(model):
@@ -120,16 +72,6 @@ class FeatureMapExtractor():
         return self.feat_map
 
 
-def _convert_rgba_to_rgb(img):
-    copied_img = img.copy().astype("float")
-    copied_img[..., 0] *= copied_img[..., 3] / 255
-    copied_img[..., 1] *= copied_img[..., 3] / 255
-    copied_img[..., 2] *= copied_img[..., 3] / 255
-    copied_img = copied_img.astype("uint8")
-    copied_img = copied_img[..., : 3]
-    return copied_img
-
-
 def convert_feature_map_to_attention_map(feat_map, img, mode=Literal["bw", "jet"], p=1):
     feat_map = feat_map.sum(axis=1)
     feat_map = feat_map ** p
@@ -142,7 +84,7 @@ def convert_feature_map_to_attention_map(feat_map, img, mode=Literal["bw", "jet"
     elif mode == "jet":
         feat_map = _apply_jet_colormap(feat_map)
         output = _blend_two_images(img1=img, img2=feat_map, alpha=0.6)
-    output = _convert_rgba_to_rgb(output)
+    output = _rgba_to_rgb(output)
     return output
 
 
@@ -150,11 +92,6 @@ def sort_feature_map(feat_map):
     argsort = torch.argsort(feat_map.sum(dim=(2, 3)), dim=1, descending=True)[0]
     feat_map = feat_map[:, argsort]
     return feat_map
-
-
-def _apply_jet_colormap(img):
-    img_jet = cv2.applyColorMap(src=(255 - img), colormap=cv2.COLORMAP_JET)
-    return img_jet
 
 
 if __name__ == "__main__":
