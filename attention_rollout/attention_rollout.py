@@ -25,7 +25,6 @@ PATCH_SIZE = 16
 N_PATCHS = (IMG_SIZE // PATCH_SIZE) ** 2
 
 
-
 class AttentionRollout:
     def __init__(
         self,
@@ -107,6 +106,7 @@ class AttentionRollout:
         attn_map = attn_map.reshape(int(attn_map.shape[0] ** 0.5), int(attn_map.shape[0] ** 0.5))
 
         attn_map = attn_map.detach().cpu().numpy()
+        attn_map -= attn_map.min()
         attn_map /= attn_map.max()
         attn_map *= 255
         attn_map = attn_map.astype("uint8")
