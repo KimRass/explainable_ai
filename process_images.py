@@ -1,11 +1,6 @@
-import numpy as np
-import torch
-import torchvision
-import torchvision.transforms as T
-from torchvision.models import resnet50, ResNet50_Weights
-from torchviz import make_dot
 import cv2
 from PIL import Image, ImageDraw, ImageFont
+import numpy as np
 from pathlib import Path
 import json
 
@@ -38,9 +33,9 @@ def _to_3d(img):
 
 
 def show_image(img):
-    copied_img = img.copy()
-    copied_img = _to_pil(copied_img)
-    copied_img.show()
+    copied = img.copy()
+    copied = _to_pil(copied)
+    copied.show()
 
 
 def _apply_jet_colormap(img):
@@ -72,19 +67,19 @@ def _blend_two_images(img1, img2, alpha=0.5):
 
 
 def save_image(img1, img2=None, alpha=0.5, path="") -> None:
-    copied_img1 = _preprocess_image(
+    copied1 = _preprocess_image(
         _to_array(img1.copy())
     )
     if img2 is None:
-        img_arr = copied_img1
+        img_arr = copied1
     else:
-        copied_img2 = _to_array(
+        copied2 = _to_array(
             _preprocess_image(
                 _to_array(img2.copy())
             )
         )
         img_arr = _to_array(
-            _blend_two_images(img1=copied_img1, img2=copied_img2, alpha=alpha)
+            _blend_two_images(img1=copied1, img2=copied2, alpha=alpha)
         )
 
     path = Path(path)
@@ -119,13 +114,13 @@ def _apply_jet_colormap(img):
 
 
 def _rgba_to_rgb(img):
-    copied_img = img.copy().astype("float")
-    copied_img[..., 0] *= copied_img[..., 3] / 255
-    copied_img[..., 1] *= copied_img[..., 3] / 255
-    copied_img[..., 2] *= copied_img[..., 3] / 255
-    copied_img = copied_img.astype("uint8")
-    copied_img = copied_img[..., : 3]
-    return copied_img
+    copied = img.copy().astype("float")
+    copied[..., 0] *= copied[..., 3] / 255
+    copied[..., 1] *= copied[..., 3] / 255
+    copied[..., 2] *= copied[..., 3] / 255
+    copied = copied.astype("uint8")
+    copied = copied[..., : 3]
+    return copied
 
 
 def _reverse_jet_colormap(img):
@@ -138,7 +133,7 @@ def _reverse_jet_colormap(img):
 
 
 def draw_bboxes(img, bboxes):
-    canvas = _convert_to_pil(img)
+    canvas = _to_pil(img)
     draw = ImageDraw.Draw(canvas)
 
     for x1, y1, x2, y2, label in bboxes.values:
@@ -164,3 +159,12 @@ def draw_bboxes(img, bboxes):
             anchor="la"
         )
     return canvas
+
+
+def denormalize_array(img):
+    copied = img.copy()
+    copied -= copied.min()
+    copied /= copied.max()
+    copied *= 255.0
+    copied = np.clip(a=copied, a_min=0, a_max=255).astype("uint8")
+    return copied

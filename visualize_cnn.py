@@ -13,14 +13,10 @@ import torchvision.transforms as T
 from torchvision.models import alexnet, AlexNet_Weights, vgg19_bn, VGG19_BN_Weights
 import matplotlib.pyplot as plt
 
-
-def denormalize_array(img):
-    copied_img = img.copy()
-    copied_img -= copied_img.min()
-    copied_img /= copied_img.max()
-    copied_img *= 255.0
-    copied_img = np.clip(a=copied_img, a_min=0, a_max=255).astype("uint8")
-    return copied_img
+from process_images import (
+    denormalize_array,
+    _to_3d
+)
 
 
 def convert_tensor_to_array(tensor):
@@ -32,18 +28,11 @@ def convert_tensor_to_array(tensor):
     return copied_tensor
 
 
-def _convert_to_3d(img):
-    if img.ndim == 2:
-        return np.dstack([img, img, img])
-    else:
-        return img
-
-
 def visualize_kernels(kernels):
     grid = torchvision.utils.make_grid(tensor=kernels, nrow=int(kernels.shape[0] ** 0.5), normalize=True, padding=3)
     grid = torch.sum(grid, axis=0)
     grid = convert_tensor_to_array(grid)
-    grid = _convert_to_3d(grid)
+    grid = _to_3d(grid)
     return grid
 
 
@@ -66,28 +55,26 @@ class FeatureMapExtractor():
         return self.feat_maps
 
 
-conv_layer = cnn.features[0]
-kernels = conv_layer.weight.data
-grid = visualize_kernels(kernels)
-show_image(grid)
+if __name__ == "__main__":
+    conv_layer = cnn.features[0]
+    kernels = conv_layer.weight.data
+    grid = visualize_kernels(kernels)
+    show_image(grid)
 
+    cnn = alexnet(weights=AlexNet_Weights.IMAGENET1K_V1)
+    img = load_image("/Users/jongbeomkim/Downloads/download.png")
+    transform = T.Compose(
+        [
+            T.ToTensor(),
+            T.Resize((256, 256)),
+            # T.Normalize(mean=0., std=1.)
+        ]
+    )
+    image = transform(img).unsqueeze(0)
 
+    feat_map_extr = FeatureMapExtractor(cnn)
+    feat_maps = feat_map_extr.get_feature_maps(image)
 
-
-cnn = alexnet(weights=AlexNet_Weights.IMAGENET1K_V1)
-img = load_image("/Users/jongbeomkim/Downloads/download.png")
-transform = T.Compose(
-    [
-        T.ToTensor(),
-        T.Resize((256, 256)),
-        # T.Normalize(mean=0., std=1.)
-    ]
-)
-image = transform(img).unsqueeze(0)
-
-feat_map_extractor = FeatureMapExtractor(cnn)
-feat_maps = feat_map_extractor.get_feature_maps(image)
-
-feat_maps[0].shape
-grid = visualize_kernels(feat_maps[1])
-show_image(grid)
+    feat_maps[0].shape
+    grid = visualize_kernels(feat_maps[1])
+    show_image(grid)
