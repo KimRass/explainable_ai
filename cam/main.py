@@ -7,7 +7,7 @@ import numpy as np
 import cv2
 from pathlib import Path
 
-from process_images import (
+from image_utils import (
     load_image,
     _blend_two_images,
     save_image,

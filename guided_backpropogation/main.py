@@ -14,9 +14,7 @@ import cv2
 from PIL import Image
 import matplotlib.pyplot as plt
 
-from process_images import (
-    load_image
-)
+from image_utils import load_image
 
 idx2class = json.load(open("/Users/jongbeomkim/Downloads/imagenet_class_index.json"))
 

@@ -12,7 +12,7 @@ from itertools import product
 from typing import Literal
 import ssl
 
-from process_images import (
+from image_utils import (
     load_image,
     show_image,
     save_image,

@@ -10,11 +10,7 @@ import numpy as np
 import cv2
 from PIL import Image
 
-from process_images import (
-    load_image,
-    _to_pil,
-    show_image
-)
+from image_utils import load_image, _to_pil, show_image
 
 
 class DeconvNet(nn.Module):

@@ -8,7 +8,7 @@ from typing import Literal
 from PIL import Image
 import requests
 
-from process_images import (
+from image_utils import (
     load_image,
     show_image,
     save_image,

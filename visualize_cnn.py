@@ -13,10 +13,7 @@ import torchvision.transforms as T
 from torchvision.models import alexnet, AlexNet_Weights, vgg19_bn, VGG19_BN_Weights
 import matplotlib.pyplot as plt
 
-from process_images import (
-    denormalize_array,
-    _to_3d
-)
+from image_utils import denormalize_array, _to_3d
 
 
 def convert_tensor_to_array(tensor):
