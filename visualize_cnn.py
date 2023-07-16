@@ -26,7 +26,9 @@ def convert_tensor_to_array(tensor):
 
 
 def visualize_kernels(kernels):
-    grid = torchvision.utils.make_grid(tensor=kernels, nrow=int(kernels.shape[0] ** 0.5), normalize=True, padding=3)
+    grid = torchvision.utils.make_grid(
+        tensor=kernels, nrow=int(kernels.shape[0] ** 0.5), normalize=True, padding=3
+    )
     grid = torch.sum(grid, axis=0)
     grid = convert_tensor_to_array(grid)
     grid = _to_3d(grid)
