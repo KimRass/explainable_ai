@@ -20,9 +20,9 @@ from image_utils import (
 IDX2CLASS = json.load(open("/Users/jongbeomkim/Desktop/workspace/explainable_ai/cam/imagenet_class_index.json"))
 
 
-def tensor_to_array(image, mean=(0.485, 0.456, 0.406), variance=(0.229, 0.224, 0.225)):
+def tensor_to_array(image, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
     img = image.clone()[0].permute((1, 2, 0)).detach().cpu().numpy()
-    img *= variance
+    img *= std
     img += mean
     img *= 255.0
     img = np.clip(img, 0, 255).astype("uint8")

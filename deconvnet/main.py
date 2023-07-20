@@ -270,7 +270,7 @@ def print_all_layers(model):
             print(f"""| {name:20s} | {str(type(module)):60s} |""")
 
 
-def postprocess_reconstructed_activation(act, mean=(0.485, 0.456, 0.406), variance=(0.229, 0.224, 0.225)):
+def postprocess_reconstructed_activation(act, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
     copied_act = act.clone().squeeze().permute((1, 2, 0)).detach().cpu().numpy()
     # copied_act *= 100
     copied_act -= copied_act.min()
